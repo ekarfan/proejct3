@@ -1,5 +1,7 @@
 version: 2.1
-
+orbs:
+  slack: circleci/slack@4.3.1
+    
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -31,10 +33,7 @@ commands:
             #  Add revert code here. You can find this in the Getting Started section.
               exit 1
             fi
-            
-  orbs:
-    slack: circleci/slack@4.3.1
-    
+                
   slack-notify:
     steps:
       - slack/notify:
