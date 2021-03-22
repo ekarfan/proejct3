@@ -54,6 +54,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install libraries
+          command: npm install
+      - run:
           name: Back-end build
           command: npm run build
       - save_cache:
@@ -86,15 +89,19 @@ jobs:
   scan-frontend:
     docker:
       # Docker image here
+      - image: circleci/node:13.8.0
     steps:
+      - checkout
       # Checkout code from git
       # Restore from cache
       # Your job code here
 
   scan-backend:
     docker:
+      - image: circleci/node:13.8.0
       # Docker image here
     steps:
+      - checkout
       # Checkout code from git
       # Restore from cache
       # Your job code here
@@ -102,6 +109,7 @@ jobs:
   deploy-infrastructure:
     docker:
       # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
       - run:
@@ -136,6 +144,7 @@ jobs:
   configure-infrastructure:
     docker:
       # Docker image here that supports Ansible
+      - image: python:3.7-alpine3.11
     steps:
       # Checkout code from git
       # Add ssh keys with fingerprint
@@ -155,6 +164,7 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       - run:
@@ -172,6 +182,7 @@ jobs:
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       - run:
@@ -193,6 +204,7 @@ jobs:
   deploy-backend:
     docker:
       # Docker image here that supports Ansible
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       # Add ssh keys with fingerprint
@@ -209,7 +221,8 @@ jobs:
 
   smoke-test:
     docker:
-      # Lightweight Docker image 
+      # Lightweight Docker image
+      - image: alpine:3.13
     steps:
       # Checkout code from git
       - run:
@@ -233,8 +246,10 @@ jobs:
   cloudfront-update:
     docker:
       # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Install dependencies
           command: |
@@ -245,11 +260,12 @@ jobs:
             # your code here
       # Here's where you will add some code to rollback on failure  
 
-cleanup:
+  cleanup:
     docker:
       # Docker image here
+        - image: amazon/aws-cli
     steps:
-      # Checkout code from git
+      - checkout
       - run:
           name: Get old stack workflow id
           command: |
