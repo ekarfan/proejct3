@@ -84,6 +84,7 @@ jobs:
   test-backend:
     docker:
       - image: circleci/node:13.8.0
+    working_directory: ~/project/backend
     steps:
       - checkout:
           path: ~/project
@@ -97,6 +98,7 @@ jobs:
     docker:
       # Docker image here
       - image: circleci/node:13.8.0
+    working_directory: ~/project/frontend
     steps:
       - checkout
       # Checkout code from git
@@ -106,7 +108,7 @@ jobs:
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ~/project/frontend
+    working_directory: ~/project/backend
       # Docker image here
     steps:
       - checkout:
@@ -119,7 +121,6 @@ jobs:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
-    working_directory: ~/project/frontend
     steps:
       # Checkout code from git
       - run:
@@ -155,7 +156,6 @@ jobs:
     docker:
       # Docker image here that supports Ansible
       - image: python:3.7-alpine3.11
-    working_directory: ~/project/frontend
     steps:
       # Checkout code from git
       # Add ssh keys with fingerprint
@@ -217,7 +217,6 @@ jobs:
     docker:
       # Docker image here that supports Ansible
       - image: circleci/node:13.8.0
-    working_directory: ~/project/frontend
     steps:
       # Checkout code from git
       # Add ssh keys with fingerprint
@@ -261,7 +260,7 @@ jobs:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
-    working_directory: ~/project/frontend
+    working_directory: ~/project
     steps:
       # Checkout code from git
       - checkout
@@ -279,7 +278,7 @@ jobs:
     docker:
       # Docker image here
         - image: amazon/aws-cli
-    working_directory: ~/project/frontend
+    working_directory: ~/project
     steps:
       - checkout
       - run:
