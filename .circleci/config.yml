@@ -32,6 +32,15 @@ commands:
               exit 1
             fi
             
+  orbs:
+    slack: circleci/slack@4.3.1
+    
+  slack-notify:
+    steps:
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
 jobs:
   build-frontend:
     docker:
@@ -109,6 +118,8 @@ jobs:
       - run:
           name: Scan Frontend
           command: npm audit --audit-level=critical
+      - slack-notify
+      
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -120,6 +131,7 @@ jobs:
       - run:
           name: Scan Backend
           command: npm audit --audit-level=critical
+      - slack-notify
 
   deploy-infrastructure:
     docker:
