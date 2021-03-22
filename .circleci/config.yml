@@ -58,9 +58,6 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - run:
-          name: Install libraries
-          command: npm install
-      - run:
           name: Back-end build
           command: npm run build
       - save_cache:
