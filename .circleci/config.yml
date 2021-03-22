@@ -104,11 +104,11 @@ jobs:
       - image: circleci/node:13.8.0
     working_directory: ~/project/frontend
     steps:
-      - checkout
-      # Checkout code from git
-      # Restore from cache
-      # Your job code here
-
+    - checkout:
+          path: ~/project
+      - run:
+          name: Scan Frontend
+          command: npm audit --audit-level=critical
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -117,9 +117,9 @@ jobs:
     steps:
       - checkout:
           path: ~/project
-      # Checkout code from git
-      # Restore from cache
-      # Your job code here
+      - run:
+          name: Scan Backend
+          command: npm audit --audit-level=critical
 
   deploy-infrastructure:
     docker:
