@@ -39,6 +39,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install libraries
+          command: npm install
+      - run:
           name: Build front-end
           command: npm run build
       - save_cache:
