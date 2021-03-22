@@ -104,7 +104,7 @@ jobs:
       - image: circleci/node:13.8.0
     working_directory: ~/project/frontend
     steps:
-    - checkout:
+      - checkout:
           path: ~/project
       - run:
           name: Scan Frontend
