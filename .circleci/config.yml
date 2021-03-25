@@ -128,8 +128,9 @@ jobs:
           path: ~/project
       - run:
           name: Scan Backend
-          command: npm audit --audit-level=critical
- 
+          command: |
+            cd backend
+            npm audit fix --audit-level=critical --force
 
   deploy-infrastructure:
     docker:
