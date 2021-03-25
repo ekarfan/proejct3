@@ -104,7 +104,6 @@ jobs:
           command: |
             npm install
             npm run test
-      - slack-notify
  
   scan-frontend:
     docker:
