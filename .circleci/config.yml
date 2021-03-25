@@ -1,6 +1,4 @@
 version: 2.1
-orbs:
-  slack: circleci/slack@4.3.1
     
 commands:
   destroy-environment:
@@ -89,7 +87,7 @@ jobs:
           command: |
             npm install
             npm run test
-      - slack-notify
+
            
           
   test-backend:
@@ -119,7 +117,7 @@ jobs:
       - run:
           name: Scan Frontend
           command: npm audit --audit-level=critical
-      - slack-notify
+ 
       
   scan-backend:
     docker:
@@ -132,7 +130,7 @@ jobs:
       - run:
           name: Scan Backend
           command: npm audit --audit-level=critical
-      - slack-notify
+ 
 
   deploy-infrastructure:
     docker:
