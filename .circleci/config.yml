@@ -121,10 +121,10 @@ jobs:
     docker:
       # Docker image here
       - image: circleci/node:13.8.0
-    working_directory: ./frontend
-    steps:
-      - checkout:
-          path: .
+   steps:
+      - checkout
+      - attach_workspace:
+          at: .
       - run:
           name: Scan Frontend
           working_directory: ./frontend
@@ -133,13 +133,13 @@ jobs:
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ./backend
-      # Docker image here
     steps:
-      - checkout:
-          path: .
+      - checkout
+      - attach_workspace:
+          at: .
       - run:
           name: Scan Backend
+          working_directory: ./backend
           command: npm audit fix --audit-level=critical --force
 
   deploy-infrastructure:
