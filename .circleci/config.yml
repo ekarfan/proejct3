@@ -188,7 +188,6 @@ jobs:
           command: yum install -y tar gzip
       - run:
           name: Ensure back-end infrastructure exists
-          working_directory: ./.circleci/files
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
@@ -233,11 +232,17 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            apk add --no-cache \
+                python3 \
+                py3-pip \
+            && pip3 install --upgrade pip \
+            && pip3 install \
+                awscli \
+            && rm -rf /var/cache/apk/*
             apk add --update ansible
             ansible --version
       - run:
           name: Configure server
-          working_directory: ./.circleci/ansible
           command: |
             ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
       # Here's where you will add some code to rollback on failure      
@@ -270,9 +275,8 @@ jobs:
      # Here's where you will add some code to rollback on failure      
 
   deploy-frontend:
-    docker:
-      # Docker image here that supports AWS CLI
-      - image: circleci/node:13.8.0
+     docker:
+      - image: amazon/aws-cli      
     working_directory: ./frontend
     steps:
       # Checkout code from git
@@ -301,7 +305,7 @@ jobs:
   deploy-backend:
     docker:
       # Docker image here that supports Ansible
-      - image: circleci/node:13.8.0
+      - image: python:3.7-alpine3.11
     steps:
       # Checkout code from git
       # Add ssh keys with fingerprint
