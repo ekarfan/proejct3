@@ -136,8 +136,11 @@ jobs:
       - image: amazon/aws-cli
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Ensure back-end infrastructure exists
+          working_directory: project/.circleci/files
+          command: |
           command: |
             aws cloudformation deploy \
               --template-file ~project/circleci/files/backend.yml \
@@ -182,13 +185,13 @@ jobs:
           at: project
       - run:
           name: Install dependencies
-          working_directory: project/circleci/ansible
+          working_directory: project/.circleci/ansible
           command: |
             apk add --update ansible
             ansible --version
       - run:
           name: Configure server
-          working_directory: project/circleci/ansible
+          working_directory: project/.circleci/ansible
           command: |
             pwd &&
             ls -la
