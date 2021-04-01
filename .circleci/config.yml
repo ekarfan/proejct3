@@ -42,10 +42,10 @@ jobs:
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ~/project/frontend
+    working_directory: ./frontend
     steps:
       - checkout:
-          path: ~/project
+          path: .
       - run:
           name: Install libraries
           command: npm install
@@ -59,10 +59,10 @@ jobs:
   build-backend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ~/project/backend
+    working_directory: ./backend
     steps:
       - checkout:
-          path: ~/project
+          path: .
       - run:
           name: Install libraries
           command: npm install
@@ -76,10 +76,10 @@ jobs:
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ~/project/frontend
+    working_directory: ./frontend
     steps:
       - checkout:
-          path: ~/project
+          path: .
       - restore_cache:
           keys: [frontend-build]
       - run:
@@ -93,10 +93,10 @@ jobs:
   test-backend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ~/project/backend
+    working_directory: ./backend
     steps:
       - checkout:
-          path: ~/project
+          path: .
       - restore_cache:
           keys: [backend-build]
       - run:
@@ -109,10 +109,10 @@ jobs:
     docker:
       # Docker image here
       - image: circleci/node:13.8.0
-    working_directory: ~/project/frontend
+    working_directory: ./frontend
     steps:
       - checkout:
-          path: ~/project
+          path: .
       - run:
           name: Scan Frontend
           command: npm audit --audit-level=critical
@@ -121,11 +121,11 @@ jobs:
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ~/project/backend
+    working_directory: ./backend
       # Docker image here
     steps:
       - checkout:
-          path: ~/project
+          path: .
       - run:
           name: Scan Backend
           command: npm audit fix --audit-level=critical --force
@@ -181,16 +181,16 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["22:4b:ad:74:88:1e:97:99:ed:42:34:1c:6d:f4:75:ae"]
       - attach_workspace:
-          at: project
+          at: .
       - run:
           name: Install dependencies
-          working_directory: project/.circleci/ansible
+          working_directory: ./.circleci/ansible
           command: |
             apk add --update ansible
             ansible --version
       - run:
           name: Configure server
-          working_directory: project/.circleci/ansible
+          working_directory: ./.circleci/ansible
           command: |
             pwd &&
             ls -la
@@ -208,12 +208,12 @@ jobs:
       # Checkout code from git
       - run:
           name: Run migrations
-          working_directory: ~/project/backend
+          working_directory: ./backend
           command: |
             npm run migrations > migration_status
       - run:
           name: Send migration results to memstash
-          working_directory: ~/project/backend
+          working_directory: ./backend
           command: |
             if grep -q "has been executed successfully" migration_status
             then
@@ -230,7 +230,7 @@ jobs:
     docker:
       # Docker image here that supports AWS CLI
       - image: circleci/node:13.8.0
-    working_directory: ~/project/frontend
+    working_directory: ./frontend
     steps:
       # Checkout code from git
       - run:
@@ -267,7 +267,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["22:4b:ad:74:88:1e:97:99:ed:42:34:1c:6d:f4:75:ae"]
       - attach_workspace:
-          at: ~/project
+          at: .
       - run:
           name: Install dependencies
           command: |
@@ -287,7 +287,7 @@ jobs:
     docker:
       # Lightweight Docker image
       - image: alpine:3.13
-    working_directory: ~/project/frontend
+    working_directory: ./frontend
     steps:
       # Checkout code from git
       - run:
@@ -313,7 +313,7 @@ jobs:
             fi
       - run:
           name: Frontend smoke test.
-          working_directory: ~/project/frontend
+          working_directory: ./frontend
           command: |
             # your code here
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.eu-central-1.amazonaws.com/index.html"
@@ -329,7 +329,7 @@ jobs:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
-    working_directory: ~/project
+    working_directory: .
     steps:
       # Checkout code from git
       - checkout
@@ -347,7 +347,7 @@ jobs:
     docker:
       # Docker image here
         - image: amazon/aws-cli
-    working_directory: ~/project
+    working_directory: .
     steps:
       - checkout
       - run:
