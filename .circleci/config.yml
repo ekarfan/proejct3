@@ -80,14 +80,22 @@ jobs:
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ./frontend
+   steps:
+      - checkout
+      - attach_workspace:
+          at: .
     steps:
       - checkout:
           path: .
       - restore_cache:
           keys: [frontend-build]
       - run:
+          name: Install junit coverage reporter
+          working_directory: ./frontend
+          command: npm install --save-dev jest-junit
+      - run:
           name: Front-end build
+          working_directory: ./frontend
           command: |
             npm install
             npm run test
@@ -97,14 +105,19 @@ jobs:
   test-backend:
     docker:
       - image: circleci/node:13.8.0
-    working_directory: ./backend
     steps:
-      - checkout:
-          path: .
+      - checkout
+      - attach_workspace:
+          at: .
       - restore_cache:
           keys: [backend-build]
       - run:
+          name: Install junit coverage reporter
+          working_directory: ./backend
+          command: npm install --save-dev jest-junit
+      - run:
           name: Back-end build
+          working_directory: ./backend
           command: |
             npm install
             npm run test
@@ -119,6 +132,7 @@ jobs:
           path: .
       - run:
           name: Scan Frontend
+          working_directory: ./frontend
           command: npm audit --audit-level=critical
  
       
@@ -165,7 +179,7 @@ jobs:
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
-              --output text >> inventory
+              --output text >> .circleci/ansible/inventory.txt
             cat inventory
       - persist_to_workspace:
           root: ~/
