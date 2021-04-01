@@ -42,7 +42,8 @@ jobs:
   install-backend-dependencies:
     docker:
       # Lightweight Docker image
-      - image: alpine:3.13    steps:
+      - image: circleci/node:13.8.0
+    steps:
       - checkout
       - run:
           name: npm install
@@ -57,7 +58,8 @@ jobs:
   install-frontend-dependencies:
     docker:
       # Lightweight Docker image
-      - image: alpine:3.13   steps:
+      - image: circleci/node:13.8.0
+    steps:
       - checkout
       - run:
           name: npm install
