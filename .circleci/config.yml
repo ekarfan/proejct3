@@ -275,10 +275,10 @@ jobs:
      # Here's where you will add some code to rollback on failure      
 
   deploy-frontend:
-     docker:
+      docker:
       - image: amazon/aws-cli      
-    working_directory: ./frontend
-    steps:
+      working_directory: ./frontend
+      steps:
       # Checkout code from git
       - run:
           name: Install dependencies
