@@ -141,24 +141,26 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your back-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              exit 1
+              --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID} \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" 
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your front-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              exit 1
+              --tags project=udapeople-frontend-${CIRCLE_WORKFLOW_ID} \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
       - run:
           name: Add back-end ip to ansible inventory
+          working_directory: project/.circleci/ansible
           command: |
-            # Your code here
-            exit 1
+            aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
+              --output text >> inventory
+            cat inventory
       - persist_to_workspace:
           root: ~/
           paths:
@@ -173,34 +175,53 @@ jobs:
       # Checkout code from git
       # Add ssh keys with fingerprint
       # attach workspace
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["22:4b:ad:74:88:1e:97:99:ed:42:34:1c:6d:f4:75:ae"]
+      - attach_workspace:
+          at: project
       - run:
           name: Install dependencies
+          working_directory: project/.circleci/ansible
           command: |
-            # Your code here
-            exit 1
+            apk add --update ansible
+            ansible --version
       - run:
           name: Configure server
+          working_directory: project/.circleci/ansible
           command: |
-            # Your code here
-            exit 1
+            pwd &&
+            ls -la
+            cat inventory
+            ansible-playbook -i inventory configure-server.yaml
       # Here's where you will add some code to rollback on failure      
 
   run-migrations:
     docker:
-      # Docker image here that supports NodeJS
+      # Docker image here- checkout: that supports NodeJS
       - image: circleci/node:13.8.0
     steps:
+      - checkout:
+          path: ~/project
       # Checkout code from git
       - run:
           name: Run migrations
+          working_directory: ~/project/backend
           command: |
-            # Your code here
-            exit 1
+            npm run migrations > migration_status
       - run:
           name: Send migration results to memstash
+          working_directory: ~/project/backend
           command: |
-            # Your code here
-            exit 1
+            if grep -q "has been executed successfully" migration_status
+            then
+              echo "DB migration was successful, will update memstash..."
+              curl -H "Content-Type: text/plain" -H "token: 2194207f-c43a-4bac-9bac-dba4fe0c20b1" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID}
+            else
+              echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
+              curl -H "Content-Type: text/plain" -H "token: 2194207f-c43a-4bac-9bac-dba4fe0c20b1" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID}
+            fi
+            echo "WorkflowID=${CIRCLE_WORKFLOW_ID}"
      # Here's where you will add some code to rollback on failure      
 
   deploy-frontend:
@@ -213,17 +234,23 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Get backend url
+          working_directory: ~/project/frontend
           command: |
             # your code here
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
+            npm run build
+
       - run:
           name: Deploy frontend objects
           command: |
-            # your code here
+            aws s3 cp ./dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --recursive
       # Here's where you will add some code to rollback on failure      
                     
   deploy-backend:
@@ -234,14 +261,24 @@ jobs:
       # Checkout code from git
       # Add ssh keys with fingerprint
       # attach workspace
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["22:4b:ad:74:88:1e:97:99:ed:42:34:1c:6d:f4:75:ae"]
+      - attach_workspace:
+          at: ~/project
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add --update ansible curl rsync openssh nodejs npm
+            ansible --version
+            pip install awscli
+            aws --version
       - run:
           name: Deploy backend
           command: |
-            # your code here
+            cat inventory
+            ansible-playbook -i inventory deploy-server.yaml -vv
+
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
@@ -255,18 +292,35 @@ jobs:
           name: Install dependencies
           command: |
             # your code here
+            apk add --update curl nodejs npm
+            pip install awscli
       - run:
           name: Get backend url
+          working_directory: ~/project/backend
           command: |
-            # your code here
+            export BACKEND_URL=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/public_dns)
+            
       - run:
           name: Backend smoke test.
           command: |
-            # your code here
+            if curl -s "http://${BACKEND_URL}:3030/api/status" | grep "ok"
+            then
+              return 0
+            else
+              return 1
+            fi
       - run:
           name: Frontend smoke test.
+          working_directory: ~/project/frontend
           command: |
             # your code here
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.eu-central-1.amazonaws.com/index.html"
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 0
+            else
+              return 1
+            fi
       # Here's where you will add some code to rollback on failure  
 
   cloudfront-update:
