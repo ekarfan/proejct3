@@ -141,7 +141,6 @@ jobs:
           name: Ensure back-end infrastructure exists
           working_directory: project/.circleci/files
           command: |
-          command: |
             aws cloudformation deploy \
               --template-file ~project/circleci/files/backend.yml \
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID} \
