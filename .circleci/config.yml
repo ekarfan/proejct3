@@ -80,13 +80,10 @@ jobs:
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
-   steps:
+    steps:
       - checkout
       - attach_workspace:
           at: .
-    steps:
-      - checkout:
-          path: .
       - restore_cache:
           keys: [frontend-build]
       - run:
@@ -99,8 +96,6 @@ jobs:
           command: |
             npm install
             npm run test
-
-           
           
   test-backend:
     docker:
@@ -121,7 +116,7 @@ jobs:
           command: |
             npm install
             npm run test
- 
+
   scan-frontend:
     docker:
       # Docker image here
@@ -134,8 +129,7 @@ jobs:
           name: Scan Frontend
           working_directory: ./frontend
           command: npm audit --audit-level=critical
- 
-      
+
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
