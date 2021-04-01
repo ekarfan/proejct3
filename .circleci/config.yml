@@ -140,7 +140,7 @@ jobs:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
+              --template-file ~project/circleci/files/backend.yml \
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID} \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" 
@@ -148,13 +148,13 @@ jobs:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
+              --template-file ~project/circleci/files/frontend.yml \
               --tags project=udapeople-frontend-${CIRCLE_WORKFLOW_ID} \
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
       - run:
           name: Add back-end ip to ansible inventory
-          working_directory: project/.circleci/ansible
+          working_directory: project/circleci/ansible
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
@@ -164,7 +164,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - project/circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
@@ -182,13 +182,13 @@ jobs:
           at: project
       - run:
           name: Install dependencies
-          working_directory: project/.circleci/ansible
+          working_directory: project/circleci/ansible
           command: |
             apk add --update ansible
             ansible --version
       - run:
           name: Configure server
-          working_directory: project/.circleci/ansible
+          working_directory: project/circleci/ansible
           command: |
             pwd &&
             ls -la
