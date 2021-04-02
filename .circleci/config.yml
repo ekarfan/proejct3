@@ -161,7 +161,7 @@ jobs:
       - run:
           name: Scan Frontend
           working_directory: ./frontend
-          command: npm audit --audit-level=critical
+          command: npm audit fix --force
 
   scan-backend:
     docker:
