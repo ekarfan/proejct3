@@ -159,8 +159,10 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Scan Frontend
-          working_directory: ./frontend
-          command: npm audit fix --audit-level=critical --force
+          command: |
+            cd frontend
+            sudo npm install
+            sudo npm audit fix --force
 
   scan-backend:
     docker:
