@@ -272,7 +272,7 @@ jobs:
             sudo apt-get -y -qq update
             sudo apt-get -qq install awscli
             sudo apt-get -y -qq install python3
-       - run:
+      - run:
           name: add values to .env files # Create a `backend/.env` file and add those values there dynamically
           command: |
             echo PWD
