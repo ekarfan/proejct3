@@ -225,8 +225,6 @@ jobs:
           root: ~/
           paths:
             -  project/.circleci/ansible/inventory.txt
-      - revert-migrations
-      - destroy-environment # Rollback on failure
 
   configure-infrastructure:
     docker:
@@ -257,8 +255,6 @@ jobs:
           name: Configure server
           command: |
             ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
-      - revert-migrations
-      - destroy-environment # Rollback on failure 
 
   run-migrations:
     docker:
@@ -294,8 +290,7 @@ jobs:
               curl -H "Content-Type: text/plain" -H "token: 2194207f-c43a-4bac-9bac-dba4fe0c20b1" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
             fi
             echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
-      - revert-migrations
-      - destroy-environment # Rollback on failure  
+  
   deploy-frontend:
       docker:
       - image: amazon/aws-cli      
@@ -324,8 +319,7 @@ jobs:
           name: Deploy frontend objects
           command: |
             aws s3 cp ./dist "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - revert-migrations
-      - destroy-environment # Rollback on failure     
+
                     
   deploy-backend:
     docker:
@@ -352,8 +346,6 @@ jobs:
           command: |
             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
-      - revert-migrations
-      - destroy-environment # Rollback on failure  
   smoke-test:
     docker:
       # Lightweight Docker image
@@ -392,8 +384,7 @@ jobs:
             else
               return 1
             fi
-      - revert-migrations
-      - destroy-environment # Rollback on failure  
+  
   cloudfront-update:
     docker:
       # Docker image here that supports AWS CLI
