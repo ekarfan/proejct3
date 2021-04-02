@@ -175,10 +175,8 @@ jobs:
           working_directory: ./backend
           command: npm audit fix --audit-level=critical --force
 
-
   deploy-infrastructure:
     docker:
-      # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
     steps:
       # Checkout code from git
