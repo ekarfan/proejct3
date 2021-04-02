@@ -206,7 +206,7 @@ jobs:
             aws backend_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
-              --output text) >> .circleci/ansible/inventory.txt
+              --output text >> .circleci/ansible/inventory.txt )
             cat ./.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
@@ -312,7 +312,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["22:4b:ad:74:88:1e:97:99:ed:42:34:1c:6d:f4:75:ae"]
       - attach_workspace:
-          at: .
+          at: /tmp/.circleci/ansible
       - run:
           name: Install dependencies
           command: |
