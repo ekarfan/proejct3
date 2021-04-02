@@ -171,8 +171,10 @@ jobs:
           keys: [backend-build]
       - run:
           name: Scan Backend
-          working_directory: ./backend
-          command: npm audit fix --audit-level=critical --force
+          command: |
+            cd backend
+            sudo npm install
+            sudo npm audit fix --force
 
   deploy-infrastructure:
     docker:
