@@ -332,7 +332,6 @@ jobs:
     docker:
       # Lightweight Docker image
       - image: alpine:3.13
-    working_directory: ./frontend
     steps:
       # Checkout code from git
       - run:
@@ -343,7 +342,6 @@ jobs:
             pip install awscli
       - run:
           name: Get backend url
-          working_directory: ~/project/backend
           command: |
             export BACKEND_URL=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/public_dns)
             
@@ -361,7 +359,7 @@ jobs:
           working_directory: ./frontend
           command: |
             # your code here
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.eu-central-1.amazonaws.com/index.html"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-west-2.amazonaws.com"            
             if curl -s ${URL} | grep "Welcome"
             then
               return 0
