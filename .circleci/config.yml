@@ -292,6 +292,9 @@ jobs:
           command: |
             cat /home/circleci/.npm/_logs/*-debug.log
             cat backend/migration.txt
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
   
   deploy-frontend:
       docker:
@@ -346,45 +349,60 @@ jobs:
             pip install awscli
             aws --version
       - run:
+          name: Compress Backend
+          command: |
+            tar -C backend -czvf artifact.tar.gz .
+            ls -la
+      - run:
           name: Deploy backend
           no_output_timeout: 30m
           command: |
             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
-  smoke-test:
+ frontend smoke-test:
     docker:
-      # Lightweight Docker image
-      - image: python:3.7-alpine3.11
+       - image: python:3.7-alpine3.11
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
-            apk add --update tar gzip curl nodejs npm
-            pip install awscli
-
+              apk add --update tar gzip curl python3 py3-pip
+              apk add --no-cache openssh-client
+              pip3 install --upgrade pip
+              pip3 install awscli
       - run:
-          name: Get backend url
+          name: Frontend smoke test
           command: |
-            BACKEND_IP=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --output text)
-            export BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
-            echo "BACKENDNS: ${BACKENDDNS}"
-            URL="http://${BACKEND_IP}:3030/api/status"
-            pwd
-            ls -la
-            echo "http://${BACKEND_IP}:3030"
-            echo $URL
-            curl $URL
-
-      - run:
-          name: Frontend smoke test.
-          command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com"            
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-west-2.amazonaws.com"
             if curl -s ${URL} | grep "Welcome"
+            then
+              return 0
+            else
+              return 1
+            fi
+      - revert-migrations
+      - destroy-environment # Rollback on failure  
+    
+  backend smoke-test:
+    docker:
+      # Lightweight Docker image 
+      - image: python:3.7-alpine3.11
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update tar gzip curl python3 py3-pip
+            pip3 install --upgrade pip
+            pip3 install awscli
+      - run:
+          name: Backend smoke test.
+          command: |
+            PUBLIC_DNS=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            if curl -s "http://${PUBLIC_DNS}:3030/api/status" | grep "ok"
             then
               return 0
             else
@@ -393,7 +411,6 @@ jobs:
 
       - revert-migrations
       - destroy-environment # Rollback on failure  
-
   
   cloudfront-update:
     docker:
@@ -484,9 +501,11 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - smoke-test:
+      - frontend smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - backend smoke-test:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
-          requires: [smoke-test]
+          requires: [frontend smoke-test, backend smoke-test]
       - cleanup:
           requires: [cloudfront-update]
