@@ -349,7 +349,7 @@ jobs:
       # Lightweight Docker image
       - image: alpine:3.13
     steps:
-    - checkout
+      - checkout
       - run:
           name: Install dependencies
           command: |
