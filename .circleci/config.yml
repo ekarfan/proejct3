@@ -197,7 +197,6 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udacity \
               --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7} \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
@@ -211,7 +210,6 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project=udacity \
               --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7} \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
@@ -233,6 +231,9 @@ jobs:
           root: .circleci/ansible
           paths:
             -  inventory.txt
+      - revert-migrations
+      - destroy-environment # Rollback on failure  
+
 
   configure-infrastructure:
     docker:
@@ -256,6 +257,8 @@ jobs:
           name: Configure server
           command: |
             ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+      - revert-migrations
+      - destroy-environment # Rollback on failure
 
   run-migrations:
     docker:
@@ -306,7 +309,9 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-  
+      - revert-migrations
+      - destroy-environment # Rollback on failure
+      
   deploy-frontend:
       docker:
       - image: amazon/aws-cli      
@@ -323,10 +328,10 @@ jobs:
           name: Get backend url
           command: |
             # your code here
-            BBACKEND_IP=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --query 'Reservations[*].Instances[*].PublicDnsName' \
-            --output text)
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo API_URL="http://${BACKEND_IP}:3030" >> "frontend/.env"
             echo "${API_URL}"
@@ -339,6 +344,9 @@ jobs:
             npm install
             npm run build
             aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - revert-migrations
+      - destroy-environment # Rollback on failure
+      
 
                     
   deploy-backend:
@@ -381,7 +389,9 @@ jobs:
           no_output_timeout: 30m
           command: |
             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
-
+      - revert-migrations
+      - destroy-environment # Rollback on failure
+      
   frontend smoke-test:
     docker:
        - image: python:3.7-alpine3.11
@@ -429,6 +439,9 @@ jobs:
             --output text)
             echo ${BACKEND_IP}
             curl "http://${BACKEND_IP}:3030/api/status"
+      - revert-migrations
+      - destroy-environment # Rollback on failure  
+
 
   
   cloudfront-update:
@@ -454,13 +467,15 @@ jobs:
             --query "StackSummaries[*].StackName" \
             --stack-status-filter CREATE_COMPLETE \
             --no-paginate --output text)
+
             echo OldWorkflowID: "$OldWorkflowID"
             echo STACKS: "$STACKS" 
+
             aws cloudformation deploy \
-            --template-file /root/project/.circleci/files/cloudfront.yml \
+            --template-file .circleci/files/cloudfront.yml \
             --stack-name udapeople-cloudfront \
-            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
-            --tags project=udapeople
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
+
             curl -H "Content-Type: text/plain" -H "token: OldWorkflowID-${CIRCLE_WORKFLOW_ID}" \
             --request PUT \
             --data "$OldWorkflowID" https://api.memstash.io/values/OldWorkflowID
