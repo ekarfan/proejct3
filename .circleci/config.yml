@@ -407,7 +407,7 @@ jobs:
       - run:
           name: Frontend smoke test
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-west-2.amazonaws.com"
             if curl -s ${URL} | grep "Welcome"
             then
               return 0
@@ -471,17 +471,18 @@ jobs:
             echo OldWorkflowID: "$OldWorkflowID"
             echo STACKS: "$STACKS" 
 
-            aws cloudformation deploy \
+            aws cloudformation update-stack \
             --template-file .circleci/files/cloudfront.yml \
             --stack-name udapeople-cloudfront \
-            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople
 
             curl -H "Content-Type: text/plain" -H "token: OldWorkflowID-${CIRCLE_WORKFLOW_ID}" \
             --request PUT \
             --data "$OldWorkflowID" https://api.memstash.io/values/OldWorkflowID
 
-      - revert-migrations
-      - destroy-environment # Rollback on failure  
+      #- revert-migrations
+      #- destroy-environment # Rollback on failure  
 
   cleanup:
     docker:
