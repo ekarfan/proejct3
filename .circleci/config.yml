@@ -180,6 +180,8 @@ jobs:
           command: |
             cd backend
             sudo npm install
+            sudo npm i --save-dev standard-version
+            sudo npm i semver 
             sudo npm audit fix --force
 
   deploy-infrastructure:
