@@ -38,7 +38,7 @@ commands:
             echo "************** SUCCESS = $SUCCESS"
             if(( $SUCCESS==1 )); 
             then
-              cd ~/project/backend
+              cd  backend
               npm install
               npm run migrations:revert
             fi
@@ -407,7 +407,7 @@ jobs:
       - run:
           name: Frontend smoke test
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-west-2.amazonaws.com"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-west-2.amazonaws.com/#/employees"  
             if curl -s ${URL} | grep "Welcome"
             then
               return 0
@@ -471,7 +471,7 @@ jobs:
             echo OldWorkflowID: "$OldWorkflowID"
             echo STACKS: "$STACKS" 
 
-            aws cloudformation update-stack \
+            aws cloudformation deploy \
             --template-file .circleci/files/cloudfront.yml \
             --stack-name udapeople-cloudfront \
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
