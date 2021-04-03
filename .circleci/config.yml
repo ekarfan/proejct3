@@ -359,7 +359,7 @@ jobs:
           command: |
             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
 
- frontend smoke-test:
+  frontend smoke-test:
     docker:
        - image: python:3.7-alpine3.11
     steps:
