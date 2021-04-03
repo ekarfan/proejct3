@@ -128,9 +128,11 @@ jobs:
           keys: [frontend-build]
       - run:
           name: Front-end TEST
-          working_directory: ./frontend
           command: |
+            cd frontend
             sudo npm install npm@latest -g
+            sudo npm i --save-dev standard-version
+            sudo npm i semver
             npm run test
           
   test-backend:
@@ -144,9 +146,11 @@ jobs:
           keys: [backend-build]
       - run:
           name: Back-end Test
-          working_directory: ./backend
           command: |
+            cd backend
             sudo npm install npm@latest -g
+            sudo npm i --save-dev standard-version
+            sudo npm i semver
             npm run test
 
   scan-frontend:
