@@ -176,7 +176,7 @@ jobs:
           command: |
             cd backend
             sudo npm install
-            npm audit fix --audit-level=critical 
+            sudo npm audit fix --force
 
   deploy-infrastructure:
     docker:
@@ -349,13 +349,13 @@ jobs:
       # Lightweight Docker image
       - image: alpine:3.13
     steps:
-      # Checkout code from git
+    - checkout
       - run:
           name: Install dependencies
           command: |
             # your code here
-            apk add --update curl nodejs npm
-            pip install awscli
+            apk add --update tar gzip curl
+
       - run:
           name: Get backend url
           command: |
@@ -372,7 +372,6 @@ jobs:
             fi
       - run:
           name: Frontend smoke test.
-          working_directory: ./frontend
           command: |
             # your code here
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-west-2.amazonaws.com"            
