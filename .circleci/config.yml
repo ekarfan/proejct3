@@ -204,8 +204,7 @@ jobs:
             
             URLS=$(aws ec2 describe-instances --region us-west-2 --query "Reservations[*].Instances[*].PublicIpAddress"   --output text)
             echo "URLS=$URLS"    
-            curl -H "Content-Type: text/plain" -H "token: 4494694a-4f89-4073-a5a0-00fb827decc6" --request PUT --data "URLS" https://api.memstash.io/values/CIRCLE_WORKFLOW_ID
-      - run:
+            
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
@@ -217,11 +216,16 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            aws ec2 describe-instances \
+            ip=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udacity" \
-              --output text >> .circleci/ansible/inventory.txt
+              --output text)
+            echo "$ip" >> .circleci/ansible/inventory.txt
             cat ./.circleci/ansible/inventory.txt
+            curl -H "Content-Type: text/plain" -H "token: IP-${CIRCLE_WORKFLOW_ID:0:9}" \
+              --request PUT \
+              --data "$ip" https://api.memstash.io/values/IP      - run:
+
       - persist_to_workspace:
           root: ~/
           paths:
@@ -282,13 +286,14 @@ jobs:
           command: |
             if grep -q "has been executed successfully" migrations.txt;
             then
-              echo "DB migration was successful, will update memstash..."
-              curl -H "Content-Type: text/plain" -H "token: 2194207f-c43a-4bac-9bac-dba4fe0c20b1" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
+             curl -H "Content-Type: text/plain" -H "token: ${CIRCLE_WORKFLOW_ID}" \
+            --request PUT \
+            --data "1" https://api.memstash.io/values/migration-${CIRCLE_WORKFLOW_ID}
             else
-              echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
-              curl -H "Content-Type: text/plain" -H "token: 2194207f-c43a-4bac-9bac-dba4fe0c20b1" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
+            curl -H "Content-Type: text/plain" -H "token: ${CIRCLE_WORKFLOW_ID}" \
+            --request PUT \
+            --data "0" https://api.memstash.io/values/migration-${CIRCLE_WORKFLOW_ID}
             fi
-            echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: LogOnFail
           when: on_fail
