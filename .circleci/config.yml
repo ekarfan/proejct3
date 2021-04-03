@@ -220,6 +220,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udacity" \
               --output text)
+            echo "ip=$ip"
             echo "$ip" >> .circleci/ansible/inventory.txt
             cat ./.circleci/ansible/inventory.txt
             curl -H "Content-Type: text/plain" -H "token: IP-${CIRCLE_WORKFLOW_ID:0:9}" \
@@ -227,9 +228,9 @@ jobs:
               --data "$ip" https://api.memstash.io/values/IP
 
       - persist_to_workspace:
-          root: ~/
+          root: .circleci/ansible
           paths:
-            -  project/.circleci/ansible/inventory.txt
+            -  inventory.txt
 
   configure-infrastructure:
     docker:
